@@ -320,8 +320,8 @@
             </div> -->
 
             <div class="form-group">
-                <label for="complaint">Description <span class="required">*</span></label>
-                <textarea id="complaint" name="complaint" required 
+                <label for="description">Description <span class="required">*</span></label>
+                <textarea id="description" name="description" required 
                           placeholder="Please describe here in detail..."></textarea>
             </div>
 
@@ -3449,12 +3449,12 @@
             // Store asset data globally
             currentAsset = asset;
 
-            document.getElementById('displayassetCode').textContent = asset.assetCode || '-';
-            document.getElementById('displaystationName').textContent = asset.stationName || '-';
-            document.getElementById('displaystationCode').textContent = asset.stationCode || '-';
-            document.getElementById('displaylocation').textContent = asset.location || '-';
-            document.getElementById('displayassetType').textContent = asset.type || '-';
-            document.getElementById('displaylicenseeName').textContent = asset.licenseeName || '-';
+            document.getElementById('displayAssetCode').textContent = asset.assetCode || '-';
+            document.getElementById('displayStationName').textContent = asset.stationName || '-';
+            document.getElementById('displayStationCode').textContent = asset.stationCode || '-';
+            document.getElementById('displayLocation').textContent = asset.location || '-';
+            document.getElementById('displayAssetType').textContent = asset.type || '-';
+            document.getElementById('displayLicenseeName').textContent = asset.licenseeName || '-';
             document.getElementById('assetInfo').style.display = 'block';
         }
 
