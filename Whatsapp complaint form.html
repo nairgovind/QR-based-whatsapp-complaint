@@ -3437,26 +3437,44 @@
 
         // Display asset information
         function displayAssetInfo(assetCode) {
-            const asset = assetDatabase[assetCode];
+          const asset = assetDatabase[assetCode];
+          
+          if (!asset) {
+              document.getElementById('errorMessage').textContent = 'Asset not found. Please scan a valid QR code.';
+              document.getElementById('errorMessage').style.display = 'block';
+              document.getElementById('complaintForm').style.display = 'none';
+              return false;
+          }
 
-            if (!asset) {
-                document.getElementById('errorMessage').textContent = 
-                    'Asset not found. Please scan a valid QR code.';
-                document.getElementById('errorMessage').style.display = 'block';
-                return;
-            }
+          currentAsset = asset;
 
-            // Store asset data globally
-            currentAsset = asset;
+          // SAFE version - checks if element exists before setting
+          const setElementText = (elementId, text) => {
+              const element = document.getElementById(elementId);
+              if (element) {
+                  element.textContent = text || '-';
+              } else {
+                  console.warn(`Element with ID '${elementId}' not found in HTML`);
+              }
+          };
 
-            document.getElementById('displayAssetCode').textContent = asset.assetCode || '-';
-            document.getElementById('displayStationName').textContent = asset.stationName || '-';
-            document.getElementById('displayStationCode').textContent = asset.stationCode || '-';
-            document.getElementById('displayLocation').textContent = asset.location || '-';
-            document.getElementById('displayAssetType').textContent = asset.type || '-';
-            document.getElementById('displayLicenseeName').textContent = asset.licenseeName || '-';
-            document.getElementById('assetInfo').style.display = 'block';
-        }
+          // Set all display values with safety checks
+          setElementText('displayAssetCode', asset.assetCode);
+          setElementText('displayStationName', asset.stationName);
+          setElementText('displayStationCode', asset.stationCode);
+          setElementText('displayLocation', asset.location);
+          setElementText('displayAssetType', asset.type);
+          setElementText('displayLicenseeName', asset.licenseeName);
+          
+          // Show asset info section
+          const assetInfoElement = document.getElementById('assetInfo');
+          if (assetInfoElement) {
+              assetInfoElement.style.display = 'block';
+          }
+          
+          return true;
+      }
+
 
         // Save to Google Sheets silently in the background
         // function saveToGoogleSheets(data) {
