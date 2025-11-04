@@ -325,7 +325,7 @@
                           placeholder="Please describe here in detail..."></textarea>
             </div>
 
-            <button type="submit" class="submit-btn">Submit via WhatsApp</button>
+            <button type="submit" class="submit-btn" id="submitBtn">Submit via WhatsApp</button>
         </form>
 
         <div class="loading" id="loading">
@@ -3674,10 +3674,21 @@
                         return;
                     }
 
-                    // Show loading
-                    document.getElementById('loading').style.display = 'block';
-                    document.getElementById('submitBtn').disabled = true;
-                    document.getElementById('complaintForm').style.display = 'none';
+                   // Show loading - with safety checks
+                    const loadingElement = document.getElementById('loading');
+                    if (loadingElement) {
+                        loadingElement.style.display = 'block';
+                    }
+
+                    const submitBtn = document.getElementById('submitBtn');
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                    }
+
+                    const formElement = document.getElementById('complaintForm');
+                    if (formElement) {
+                        formElement.style.display = 'none';
+                    }
 
                     // Prepare data for Google Sheets
                     const submittedDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
@@ -3736,9 +3747,22 @@
                 } catch(error) {
                     console.error('Form submission error:', error);
                     alert('An error occurred while submitting the form. Please try again.');
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('submitBtn').disabled = false;
-                    document.getElementById('complaintForm').style.display = 'block';
+                    // Hide loading - with safety checks
+                    const loadingElement = document.getElementById('loading');
+                    if (loadingElement) {
+                        loadingElement.style.display = 'none';
+                    }
+
+                    const submitBtn = document.getElementById('submitBtn');
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                    }
+
+                    const formElement = document.getElementById('complaintForm');
+                    if (formElement) {
+                        formElement.style.display = 'block';
+                    }
+
                 }
             });
             // =====================================================================
