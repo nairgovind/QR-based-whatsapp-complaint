@@ -235,27 +235,27 @@
             <h2>Asset Details</h2>
             <div class="info-row">
                 <span class="info-label">Asset Code:</span>
-                <span class="info-value" id="assetCode">-</span>
+                <span class="info-value" id="displayassetCode">-</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Station:</span>
-                <span class="info-value" id="stationName">-</span>
+                <span class="info-value" id="displaystationName">-</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Station Code:</span>
-                <span class="info-value" id="stationCode">-</span>
+                <span class="info-value" id="displaystationCode">-</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Location:</span>
-                <span class="info-value" id="location">-</span>
+                <span class="info-value" id="displaylocation">-</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Type:</span>
-                <span class="info-value" id="assetType">-</span>
+                <span class="info-value" id="displayassetType">-</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Licensee:</span>
-                <span class="info-value" id="licenseeName">-</span>
+                <span class="info-value" id="displaylicenseeName">-</span>
             </div>
         </div>
 
@@ -3401,6 +3401,9 @@
             ]
         };
 
+        // Store current asset data globally
+        let currentAsset = null;
+
          // Update sub-types dropdown based on issue type selection
         function updateSubTypes() {
             const issueType = document.getElementById('issueType').value;
@@ -3417,6 +3420,14 @@
                 });
             }
         }
+
+         // Add event listener for issue type change
+        document.addEventListener('DOMContentLoaded', function() {
+            const issueType = document.getElementById('issueType');
+            if (issueType) {
+                issueType.addEventListener('change', updateSubTypes);
+            }
+        });
 
         // Get asset code from URL parameter
         function getAssetCodeFromURL() {
@@ -3435,12 +3446,15 @@
                 return;
             }
 
-            document.getElementById('assetCode').textContent = asset.assetCode || '-';
-            document.getElementById('stationName').textContent = asset.stationName || '-';
-            document.getElementById('stationCode').textContent = asset.stationCode || '-';
-            document.getElementById('location').textContent = asset.location || '-';
-            document.getElementById('assetType').textContent = asset.type || '-';
-            document.getElementById('licenseeName').textContent = asset.licenseeName || '-';
+            // Store asset data globally
+            currentAsset = asset;
+
+            document.getElementById('displayassetCode').textContent = asset.assetCode || '-';
+            document.getElementById('displaystationName').textContent = asset.stationName || '-';
+            document.getElementById('displaystationCode').textContent = asset.stationCode || '-';
+            document.getElementById('displaylocation').textContent = asset.location || '-';
+            document.getElementById('displayassetType').textContent = asset.type || '-';
+            document.getElementById('displaylicenseeName').textContent = asset.licenseeName || '-';
             document.getElementById('assetInfo').style.display = 'block';
         }
 
@@ -3474,99 +3488,112 @@
                 console.log('Data saved to both sheets via Admin script');
             } catch(error) {
                 console.log('Background save initiated');
+                return true; // Continue with WhatsApp even if sheet save fails
             }
+        }
+
+        // Get form field value safely
+        function getFieldValue(fieldId) {
+            const element = document.getElementById(fieldId);
+            if (!element) {
+                console.error(`Field with ID '${fieldId}' not found`);
+                return '';
+            }
+            return element.value.trim();
         }
 
        
         // Handle form submission
-        document.getElementById('complaintForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
+        // document.getElementById('complaintForm').addEventListener('submit', async function(e) {
+        //     e.preventDefault();
 
-            const assetCode = getAssetCodeFromURL();
-            const asset = assetDatabase[assetCode];
+        //     const assetCode = getAssetCodeFromURL();
+        //     const asset = assetDatabase[assetCode];
 
-            if (!asset) {
-                alert('Asset information not found. Please scan a valid QR code.');
-                return;
-            }
+        //     if (!asset) {
+        //         alert('Asset information not found. Please scan a valid QR code.');
+        //         return;
+        //     }
 
-            // Get form data
-            const name = document.getElementById('name').value;
-            const mobile = document.getElementById('mobile').value;
-            const email = document.getElementById('email').value;
-            const pnruts = document.getElementById('pnruts').value;
-            const issueType = document.getElementById('issueType').value;
-            const issueSubType = document.getElementById('issueSubType').value;
-            const description = document.getElementById('description').value;
-            const photoFile = document.getElementById('photo').files[0];
+        //     // Get form data
+        //     const name = document.getElementById('name').value;
+        //     const mobile = document.getElementById('mobile').value;
+        //     const email = document.getElementById('email').value;
+        //     const pnruts = document.getElementById('pnruts').value;
+        //     const issueType = document.getElementById('issueType').value;
+        //     const issueSubType = document.getElementById('issueSubType').value;
+        //     const description = document.getElementById('description').value;
+        //     const photoFile = document.getElementById('photo').files[0];
 
-            // Validate mobile number
-            if (!/^[0-9]{10}$/.test(mobile)) {
-                alert('Please enter a valid 10-digit mobile number');
-                return;
-            }
+        //     // Validate mobile number
+        //     if (!/^[0-9]{10}$/.test(mobile)) {
+        //         alert('Please enter a valid 10-digit mobile number');
+        //         return;
+        //     }
 
-            // Show loading
-            document.getElementById('loading').style.display = 'block';
-            document.querySelector('.submit-btn').style.display = 'none';
+        //     // Show loading
+        //     document.getElementById('loading').style.display = 'block';
+        //     document.querySelector('.submit-btn').style.display = 'none';
 
-            // Prepare data for Google Sheets (IDENTICAL for both sheets)
-            const submittedDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-            const sheetData = {
-                name: name,
-                mobile: mobile,
-                assetCode: asset.assetCode,
-                stationCode: asset.stationCode,
-                stationName: asset.stationName,
-                location: asset.location,
-                type: asset.type,
-                licenseeName: asset.licenseeName,
-                issueType: issueType,
-                issueSubType: issueSubType,
-                description: description,
-                pnruts: pnruts,
-                submittedDate: submittedDate,
-                hasPhoto: photoFile ? true : false
-            };
+        //     // Prepare data for Google Sheets (IDENTICAL for both sheets)
+        //     const submittedDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+        //     const sheetData = {
+        //         name: name,
+        //         mobile: mobile,
+        //         assetCode: asset.assetCode,
+        //         stationCode: asset.stationCode,
+        //         stationName: asset.stationName,
+        //         location: asset.location,
+        //         type: asset.type,
+        //         licenseeName: asset.licenseeName,
+        //         issueType: issueType,
+        //         issueSubType: issueSubType,
+        //         description: description,
+        //         pnruts: pnruts,
+        //         submittedDate: submittedDate,
+        //         hasPhoto: photoFile ? true : false
+        //     };
 
-            // Save to Google Sheets (Admin script forwards to Duty Staff sheet automatically)
-            await saveToGoogleSheets(sheetData);
+        //     // Save to Google Sheets (Admin script forwards to Duty Staff sheet automatically)
+        //     await saveToGoogleSheets(sheetData);
 
-            // Create WhatsApp message
-            let message = `🚂 RAILWAY ASSET ${issueType.toUpperCase()}\n\n`;
-            message += `📋 Asset Details:\n`;
-            message += `Asset Code: ${asset.assetCode}\n`;
-            message += `Station: ${asset.stationName} (${asset.stationCode})\n`;
-            message += `Location: ${asset.location}\n`;
-            message += `Type: ${asset.type}\n`;
-            message += `Licensee: ${asset.licenseeName}\n\n`;
-            message += `👤 Complainant Details:\n`;
-            message += `Name: ${name}\n`;
-            message += `Mobile: ${mobile}\n`;
-            if (email) message += `Email: ${email}\n`;
-            message += `PNR/UTS: ${pnruts}\n\n`;
-            message += `📝 ${issueType} Details:\n`;
-            message += `Type: ${issueType}\n`;
-            message += `Sub-Type: ${issueSubType}\n`;
-            message += `Description: ${description}\n\n`;
-            if (photoFile) message += `📷 Photo: Will be sent in next message\n\n`;
-            message += `⏰ Submitted: ${submittedDate}`;
+        //     // Create WhatsApp message
+        //     let message = `🚂 RAILWAY ASSET ${issueType.toUpperCase()}\n\n`;
+        //     message += `📋 Asset Details:\n`;
+        //     message += `Asset Code: ${asset.assetCode}\n`;
+        //     message += `Station: ${asset.stationName} (${asset.stationCode})\n`;
+        //     message += `Location: ${asset.location}\n`;
+        //     message += `Type: ${asset.type}\n`;
+        //     message += `Licensee: ${asset.licenseeName}\n\n`;
+        //     message += `👤 Complainant Details:\n`;
+        //     message += `Name: ${name}\n`;
+        //     message += `Mobile: ${mobile}\n`;
+        //     if (email) message += `Email: ${email}\n`;
+        //     message += `PNR/UTS: ${pnruts}\n\n`;
+        //     message += `📝 ${issueType} Details:\n`;
+        //     message += `Type: ${issueType}\n`;
+        //     message += `Sub-Type: ${issueSubType}\n`;
+        //     message += `Description: ${description}\n\n`;
+        //     if (photoFile) message += `📷 Photo: Will be sent in next message\n\n`;
+        //     message += `⏰ Submitted: ${submittedDate}`;
 
-            // Use SINGLE duty staff WhatsApp number
-            const whatsappNumber = DUTY_STAFF_WHATSAPP;
+        //     // Use SINGLE duty staff WhatsApp number
+        //     const whatsappNumber = DUTY_STAFF_WHATSAPP;
 
-            // Encode message for URL
-            const encodedMessage = encodeURIComponent(message);
-            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+        //     // Encode message for URL
+        //     const encodedMessage = encodeURIComponent(message);
+        //     const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
 
-            // Redirect to WhatsApp
-            setTimeout(() => {
-                window.location.href = whatsappURL;
-            }, 1000);
-        });
+        //     // Redirect to WhatsApp
+        //     setTimeout(() => {
+        //         window.location.href = whatsappURL;
+        //     }, 1000);
+        // });
 
-        // Initialize on page load
+        // Handle form submission
+        // DOMContentLoaded - FIRST
         window.addEventListener('DOMContentLoaded', function() {
+            // Page load initialization
             const assetCode = getAssetCodeFromURL();
 
             if (!assetCode) {
@@ -3575,9 +3602,130 @@
                 document.getElementById('errorMessage').style.display = 'block';
                 document.getElementById('complaintForm').style.display = 'none';
             } else {
-                displayAssetInfo(assetCode);
+                const assetLoaded = displayAssetInfo(assetCode);
+                if (!assetLoaded) {
+                    console.error('Failed to load asset information');
+                }
             }
+
+            // ========== MOVE FORM HANDLER HERE - INSIDE DOMContentLoaded ==========
+            document.getElementById('complaintForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                // Check if asset data is loaded
+                if (!currentAsset) {
+                    alert('Asset information not loaded. Please refresh and try again.');
+                    return;
+                }
+
+                // Get form data with error handling
+                try {
+                    const name = getFieldValue('name');
+                    const mobile = getFieldValue('mobile');
+                    const email = getFieldValue('email');
+                    const pnruts = getFieldValue('pnruts');
+                    const issueType = getFieldValue('issueType');
+                    const issueSubType = getFieldValue('issueSubType');
+                    const description = getFieldValue('description');
+                    const photoInput = document.getElementById('photo');
+                    const photoFile = photoInput ? photoInput.files[0] : null;
+
+                    // Validate required fields
+                    if (!name) {
+                        alert('Please enter your name');
+                        return;
+                    }
+
+                    if (!mobile || !/^[0-9]{10}$/.test(mobile)) {
+                        alert('Please enter a valid 10-digit mobile number');
+                        return;
+                    }
+
+                    if (!issueType) {
+                        alert('Please select an issue type');
+                        return;
+                    }
+
+                    if (!issueSubType) {
+                        alert('Please select an issue sub-type');
+                        return;
+                    }
+
+                    if (!description) {
+                        alert('Please enter a description');
+                        return;
+                    }
+
+                    // Show loading
+                    document.getElementById('loading').style.display = 'block';
+                    document.getElementById('submitBtn').disabled = true;
+                    document.getElementById('complaintForm').style.display = 'none';
+
+                    // Prepare data for Google Sheets
+                    const submittedDate = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+                    const sheetData = {
+                        name: name,
+                        mobile: mobile,
+                        assetCode: currentAsset.assetCode,
+                        stationCode: currentAsset.stationCode,
+                        stationName: currentAsset.stationName,
+                        location: currentAsset.location,
+                        type: currentAsset.type,
+                        licenseeName: currentAsset.licenseeName,
+                        issueType: issueType,
+                        issueSubType: issueSubType,
+                        description: description,
+                        pnruts: pnruts || 'N/A',
+                        submittedDate: submittedDate,
+                        hasPhoto: photoFile ? true : false
+                    };
+
+                    // Save to Google Sheets
+                    await saveToGoogleSheets(sheetData);
+
+                    // Create WhatsApp message
+                    let message = `🚂 RAILWAY ASSET ${issueType.toUpperCase()}\n\n`;
+                    message += `📋 Asset Details:\n`;
+                    message += `Asset Code: ${currentAsset.assetCode}\n`;
+                    message += `Station: ${currentAsset.stationName} (${currentAsset.stationCode})\n`;
+                    message += `Location: ${currentAsset.location}\n`;
+                    message += `Type: ${currentAsset.type}\n`;
+                    message += `Licensee: ${currentAsset.licenseeName}\n\n`;
+                    message += `👤 Complainant Details:\n`;
+                    message += `Name: ${name}\n`;
+                    message += `Mobile: ${mobile}\n`;
+                    if (email) message += `Email: ${email}\n`;
+                    if (pnruts) message += `PNR/UTS: ${pnruts}\n`;
+                    message += `\n📝 ${issueType} Details:\n`;
+                    message += `Type: ${issueType}\n`;
+                    message += `Sub-Type: ${issueSubType}\n`;
+                    message += `Description: ${description}\n\n`;
+                    if (photoFile) message += `📷 Photo: Will be sent in next message\n\n`;
+                    message += `⏰ Submitted: ${submittedDate}`;
+
+                    // Use SINGLE duty staff WhatsApp number
+                    const whatsappNumber = DUTY_STAFF_WHATSAPP;
+
+                    // Encode message for URL
+                    const encodedMessage = encodeURIComponent(message);
+                    const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+
+                    // Redirect to WhatsApp
+                    setTimeout(() => {
+                        window.location.href = whatsappURL;
+                    }, 1000);
+
+                } catch(error) {
+                    console.error('Form submission error:', error);
+                    alert('An error occurred while submitting the form. Please try again.');
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('submitBtn').disabled = false;
+                    document.getElementById('complaintForm').style.display = 'block';
+                }
+            });
+            // =====================================================================
         });
+
     </script>
 </body>
 </html>
